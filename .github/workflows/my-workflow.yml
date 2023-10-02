@@ -1,9 +1,9 @@
-name: terraform workflow on ${{ github.repository }}
+name: terraform workflow
 run-name: This is testing out GitHub Actions 🚀
 on:
   push:
     branches:
-      - "main"
+      - "master"
 
 jobs:
   terraform-job:
