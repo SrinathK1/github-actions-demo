@@ -1,15 +1,19 @@
 name: terraform workflow
+
 run-name: This is testing out GitHub Actions 🚀
+
 on:
   push:
     branches:
-      - "master"
+      - master
 
 jobs:
-  terraform-job:
+  build:
     name: "Terraform job"
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: Install terrraform
         run: |
           sudo apt-get install unzip
@@ -29,6 +33,3 @@ jobs:
         run: |
           echo "${{ vars.ENV }}"
           echo "${{ secrets.NAME }}"
-
-
-  
