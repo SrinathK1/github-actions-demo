@@ -1,0 +1,109 @@
+name: Learn-GitHub-Actions-With-Secrets
+
+on:
+  push:
+    branches: [main, dev, feature/*]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - stage
+          - prod
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_run:
+    workflows: ["Build Workflow"]
+    types: [completed]
+
+# =========================
+# Global Environment Variables
+# =========================
+env:
+  APP_NAME: MySampleApp
+  REGION: us-east-1
+  LOG_LEVEL: info
+
+# =========================
+# Jobs
+# =========================
+jobs:
+  # -------------------------
+  # 1️⃣ Job: Code Validation
+  # -------------------------
+  code-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        run: echo "Checking out code for $APP_NAME..."
+
+      - name: Lint Code
+        run: echo "Running linter at log level $LOG_LEVEL"
+
+      - name: Static Code Analysis
+        run: echo "Performing static analysis on $APP_NAME"
+
+  # -------------------------
+  # 2️⃣ Job: Build & Test
+  # -------------------------
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: code-check
+    steps:
+      - name: Build Application
+        run: echo "Building application in region $REGION"
+
+      - name: Run Unit Tests
+        run: echo "Running unit tests..."
+
+      - name: Use Repo Secret
+        run: echo "Using secret API key safely (hidden): ${{ secrets.REPO_API_KEY }}"
+
+      - name: Use Environment Secret
+        run: echo "Using environment secret DB_PASSWORD (not printed for security reasons)"
+
+  # -------------------------
+  # 3️⃣ Job: Package & Upload
+  # -------------------------
+  package:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - name: Package Artifact
+        run: echo "Packaging build for $APP_NAME"
+
+      - name: Upload Artifact
+        run: echo "Uploading artifact to S3 bucket using AWS credentials"
+
+      - name: Use Secret from Env
+        run: echo "Using AWS credentials (hidden): ${{ secrets.AWS_ACCESS_KEY_ID }}"
+
+  # -------------------------
+  # 4️⃣ Job: Deploy (Manual Approval)
+  # -------------------------
+  deploy:
+    runs-on: ubuntu-latest
+    needs: package
+    environment:
+      name: production
+      # 🟢 Manual approval required before this job runs
+    env:
+      DEPLOY_REGION: us-west-2
+    steps:
+      - name: Wait for Approval
+        run: echo "Waiting for manual approval for deployment..."
+
+      - name: Deploy to Production
+        run: echo "Deploying $APP_NAME to $DEPLOY_REGION using deployment token..."
+
+      - name: Use Deployment Token
+        run: echo "Using deployment secret token (hidden): ${{ secrets.DEPLOY_TOKEN }}"
+
+      - name: Post Deployment
+        run: echo "Deployment verification complete!"
