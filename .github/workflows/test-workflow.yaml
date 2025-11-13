@@ -30,9 +30,6 @@ env:
   REGION: us-east-1
   LOG_LEVEL: info
 
-# =========================
-# Jobs
-# =========================
 jobs:
   # -------------------------
   # 1️⃣ Job: Code Validation
@@ -63,10 +60,14 @@ jobs:
         run: echo "Running unit tests..."
 
       - name: Use Repo Secret
-        run: echo "Using secret API key safely (hidden): ${{ secrets.REPO_API_KEY }}"
+        run: echo "Using secret API key safely (hidden)"
+        env:
+          API_KEY: ${{ secrets.REPO_API_KEY }}
 
       - name: Use Environment Secret
-        run: echo "Using environment secret DB_PASSWORD (not printed for security reasons)"
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: echo "Environment secret (DB_PASSWORD) loaded successfully but not displayed."
 
   # -------------------------
   # 3️⃣ Job: Package & Upload
@@ -80,9 +81,12 @@ jobs:
 
       - name: Upload Artifact
         run: echo "Uploading artifact to S3 bucket using AWS credentials"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Use Secret from Env
-        run: echo "Using AWS credentials (hidden): ${{ secrets.AWS_ACCESS_KEY_ID }}"
+      - name: Confirm Secret Usage
+        run: echo "AWS credentials are configured and masked automatically by GitHub."
 
   # -------------------------
   # 4️⃣ Job: Deploy (Manual Approval)
@@ -92,18 +96,16 @@ jobs:
     needs: package
     environment:
       name: production
-      # 🟢 Manual approval required before this job runs
     env:
       DEPLOY_REGION: us-west-2
+      DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
     steps:
       - name: Wait for Approval
         run: echo "Waiting for manual approval for deployment..."
 
       - name: Deploy to Production
         run: echo "Deploying $APP_NAME to $DEPLOY_REGION using deployment token..."
-
-      - name: Use Deployment Token
-        run: echo "Using deployment secret token (hidden): ${{ secrets.DEPLOY_TOKEN }}"
 
       - name: Post Deployment
         run: echo "Deployment verification complete!"
