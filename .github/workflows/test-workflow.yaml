@@ -2,9 +2,9 @@ name: Learn-GitHub-Actions-With-Secrets
 
 on:
   push:
-    branches: [main, dev, feature/*]
+    branches: [master, dev, feature/*]
   pull_request:
-    branches: [main, dev]
+    branches: [master, dev]
   workflow_dispatch:
     inputs:
       environment:
